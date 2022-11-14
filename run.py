@@ -11,9 +11,9 @@ import subprocess
 #args: DarkPhoton 14 0.1 [0.0001] 11 -11 mytest /Users/mcfayden/Work/FASER/FASER2/FASER_FORESEE/FORESEE/ 0 0 False test1
 
 mode="run"
-#mode="G4"
+mode="G4"
 #mode="runcombine"
-mode="combine"
+#mode="combine"
 #mode="eff"
 
 do_hepmc=False
@@ -81,71 +81,99 @@ pids=[[-11, 11],[-13,13],[999,999]]
 
 
 setup_dict={
-    "F2-default":{
-        "name":"FASER2 Orig",# (Default)",
-        #"color":"maroon",
-        "color":"firebrick",
-        "selection":"np.sqrt(x.x**2 + x.y**2)< 1",
-        "length":5,
-        "distance":480,
-        "channels": None,
-        "G4":["FASER2_HepMC_v4_FASER2_Default_3rdTrkStation"],
-        "effs":{"sep":[(0.1,'sep>0.1mm','abs(ep_y-em_y)>0.1'),
-                       (1,'sep>1mm','abs(ep_y-em_y)>1'),
-                       (5,'sep>5mm','abs(ep_y-em_y)>5'),
-                       (10,'sep>10mm','abs(ep_y-em_y)>10'),
-                       (100,'sep>100mm','abs(ep_y-em_y)>10')]}
-    },
 
-    "S2-L10-D2":{
-        #"name":"S2 L=10m D=2m",
-        "name":"Old Baseline",
-        "color":"royalblue",
-        #"color":"darkgreen",
-        #"color":"orange",
-        "selection":"np.sqrt(x.x**2 + x.y**2)< 1",
+#    "F2-default":{
+#        "name":"FASER2 Orig",# (Default)",
+#        #"color":"maroon",
+#        "color":"firebrick",
+#        "selection":"np.sqrt(x.x**2 + x.y**2)< 1",
+#        "length":5,
+#        "distance":480,
+#        "channels": None,
+#        "G4":["FASER2_HepMC_v4_FASER2_Default_3rdTrkStation"],
+#        "effs":{"sep":[(0.1,'sep>0.1mm','abs(ep_y-em_y)>0.1'),
+#                       (1,'sep>1mm','abs(ep_y-em_y)>1'),
+#                       (5,'sep>5mm','abs(ep_y-em_y)>5'),
+#                       (10,'sep>10mm','abs(ep_y-em_y)>10'),
+#                      (100,'sep>100mm','abs(ep_y-em_y)>100')]}
+#    },
+#
+#    "S2-L10-D2":{
+#        #"name":"S2 L=10m D=2m",
+#        "name":"Old Baseline",
+#        "color":"royalblue",
+#        #"color":"darkgreen",
+#        #"color":"orange",
+#        "selection":"np.sqrt(x.x**2 + x.y**2)< 1",
+#        "length":10,
+#        "distance":615,
+#        "channels": None,
+#        "G4":["FASER2_HepMC_v4_FASER2_Cavern_3rdTrkStation"],
+#        "effs":{"sep":[(0.1,'sep>0.1mm','abs(ep_y-em_y)>0.1'),
+#                       (1,'sep>1mm','abs(ep_y-em_y)>1'),
+#                       (5,'sep>5mm','abs(ep_y-em_y)>5'),
+#                       (10,'sep>10mm','abs(ep_y-em_y)>10'),
+#                       (100,'sep>100mm','abs(ep_y-em_y)>100')]}
+#
+#    },
+#
+    
+#        "R1-L10-R1x3":{
+#            #"name":"R1 L=10m X=3m Y=1m",
+#            "name":"New Baseline (X=3m Y=1m)",
+#            #"color":"cornflowerblue",
+#            "color":"forestgreen",
+#            #"color":"limegreen",
+#            "style":"dashed",
+#            "selection":"(np.sqrt(x.x**2)<1.5) * (np.sqrt(x.y**2)<0.5)",
+#            "length":10,
+#            "distance":615,
+#            "channels": None,
+#            "G4":["FASER2_HepMC_v4_FASER2_Cavern_Rect_Baseline_Bhoriz_3rdTrkStation"],
+#            "effs":{"sep":[(0.1,'sep>0.1mm','abs(ep_x-em_x)>0.1'),
+#                           (1,'sep>1mm','abs(ep_x-em_x)>1'),
+#                           (5,'sep>5mm','abs(ep_x-em_x)>5'),
+#                           (10,'sep>10mm','abs(ep_x-em_x)>10'),
+#                           (100,'sep>100mm','abs(ep_x-em_x)>10')]}
+#        },
+
+#      "R1-L10-R0p5x3":{
+#          #"name":"R1 L=10m X=3m Y=0.5m",
+#          "name":"New Baseline (X=3m Y=0.5m)",
+#          #"color":"lightsteelblue",
+#          "color":"orchid",
+#          #"color":"limegreen",
+#          "style":"dotted",
+#          "selection":"(np.sqrt(x.x**2)<1.5) * (np.sqrt(x.y**2)<0.25)",
+#          "length":10,
+#          "distance":615,
+#          "channels": None,
+#          "G4":["FASER2_HepMC_v4_FASER2_Cavern_Rect_KEKRect_3rdTrkStation"],
+#          "effs":{"sep":[(0.1,'sep>0.1mm','abs(ep_x-em_x)>0.1'),
+#                         (1,'sep>1mm','abs(ep_x-em_x)>1'),
+#                         (5,'sep>5mm','abs(ep_x-em_x)>5'),
+#                         (10,'sep>10mm','abs(ep_x-em_x)>10'),
+#                         (100,'sep>100mm','abs(ep_x-em_x)>100')]}
+#      },
+
+    "R1-L10-R0p5x2":{
+        #"name":"R1 L=10m X=2m Y=0.5m",
+        "name":"New Baseline (X=2m Y=0.5m)",
+        #"color":"lightsteelblue",
+        "color":"pink",
+        "style":"dotted",
+        "selection":"(np.sqrt(x.x**2)<1.0) * (np.sqrt(x.y**2)<0.25)",
         "length":10,
         "distance":615,
-        "channels": None
+        "channels": None,
+        "G4":["FASER2_HepMC_v4_FASER2_Cavern_Rect_KEKCircle_3rdTrkStation"],
+        "effs":{"sep":[(0.1,'sep>0.1mm','abs(ep_x-em_x)>0.1'),
+                       (1,'sep>1mm','abs(ep_x-em_x)>1'),
+                       (5,'sep>5mm','abs(ep_x-em_x)>5'),
+                       (10,'sep>10mm','abs(ep_x-em_x)>10'),
+                       (100,'sep>100mm','abs(ep_x-em_x)>100')]}
     },
-
-        "R1-L10-R0p5x2":{
-            #"name":"R1 L=10m X=2m Y=0.5m",
-            "name":"New Baseline (X=2m Y=0.5m)",
-            #"color":"lightsteelblue",
-            "color":"pink",
-            "style":"dotted",
-            "selection":"(np.sqrt(x.x**2)<0.25) * (np.sqrt(x.y**2)<1.0)",
-            "length":10,
-            "distance":615,
-            "channels": None
-        },
-
     
-        "R1-L10-R1x3":{
-            #"name":"R1 L=10m X=3m Y=1m",
-            "name":"New Baseline (X=3m Y=1m)",
-            #"color":"cornflowerblue",
-            "color":"forestgreen",
-            #"color":"limegreen",
-            "style":"dashed",
-            "selection":"(np.sqrt(x.x**2)<0.5) * (np.sqrt(x.y**2)<1.5)",
-            "length":10,
-            "distance":615,
-            "channels": None
-        },
-        "R1-L10-R0p5x3":{
-            #"name":"R1 L=10m X=3m Y=0.5m",
-            "name":"New Baseline (X=3m Y=0.5m)",
-            #"color":"lightsteelblue",
-            "color":"orchid",
-            #"color":"limegreen",
-            "style":"dotted",
-            "selection":"(np.sqrt(x.x**2)<0.25) * (np.sqrt(x.y**2)<1.5)",
-            "length":10,
-            "distance":615,
-            "channels": None
-        },
 
     
 }
@@ -224,26 +252,32 @@ for setup_name in setup_dict:
                             f_eff=ROOT.TFile.Open(outroot,"READ")
                             t_eff = f_eff.Get("Hits")
 
-                            var='ep_y'
-                            if abs(pid1) == 13:
-                                var='mp_y'
-                            elif abs(pid1) == 999:
-                                var='hp_y'
 
-                            print(f"Using var {var}")
+                            varp='ep'
+                            varm='em'
+                            if abs(pid1) == 13:
+                                varp='mp'
+                                varm='mm'
+                            elif abs(pid1) == 999:
+                                varp='hp'
+                                varm='hm'
+
+                            vary=varp+'_y'                                
+                            print(f"Using var {vary}")
 
 
                             hall=ROOT.TH1F("hall","hall",1000,0,10000)                                
-                            t_eff.Draw(f"{var}>>hall");
+                            t_eff.Draw(f"{vary}>>hall");
                             sumall+=hall.Integral()*xs
                             print(f"pid1 = {pid1}, all =",hall.Integral(),xs,hall.Integral()*xs)
                                 
                             for n,(effval,efftitle,effstring) in enumerate(setup["effs"][eff]):
 
+                                effstring=effstring.replace('ep',varp).replace('em',varm)
                                 heff=ROOT.TH1F("heff","heff",1000,0,10000)
-                                t_eff.Draw(f"{var}>>heff",effstring)
+                                t_eff.Draw(f"{vary}>>heff",effstring)
 
-                                print(f"pid1 = {pid1}, effs[{n}] =",heff.Integral(),xs,heff.Integral()*xs)
+                                print(f"pid1 = {pid1},",effstring,", effs[{n}] =",heff.Integral(),xs,heff.Integral()*xs)
                                 sumeffs[n]+=heff.Integral()*xs
 
                                 
@@ -306,7 +340,8 @@ for setup_name in setup_dict:
                     
                 hepname=f"{outdir}/events_{energy}TeV_m{mass}GeV_c{coup}to_{pid1}_{pid2}_{suffix}.hepmc"
 
-                if do_hepmc:
+                # Run HepMC creation
+                if mode=="run" and do_hepmc:
                     try:
                         hepname=f.write_hepmc(nevents)
                         hepname=outdir+"/"+hepname
