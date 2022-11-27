@@ -5,7 +5,7 @@ import gc # import garbage collector interface
 import shutil
 import subprocess
 from array import array
-
+import utils,setups
 
 
 
@@ -13,189 +13,41 @@ from array import array
 #args: DarkPhoton 14 0.1 [0.0001] 11 -11 mytest /Users/mcfayden/Work/FASER/FASER2/FASER_FORESEE/FORESEE/ 0 0 False test1
 
 runmode="run"
+runmode="combine"
 #runmode="G4"
-#runmode="runcombine"
-#runmode="combine"
 #runmode="eff"
 #runmode="plotsep"
 
 do_hepmc=False
 do_hepmc=True
 
-
+# Set model inputs
 model="DarkPhoton"
+model="DarkHiggs"
+masses,couplings,decays=utils.get_model_setup(model)
 
-
+# Set run parameters
 energy="14"
-outdir="mytest2"
-path="/Users/mcfayden/Work/FASER/FASER2/FASER_FORESEE/FORESEE/"
 t0=0
 notime=False
-
 lumi=3000.*1000. #3000 fb-1 (sample is in pb)
-
 nevents=10000
 
 randomSeed=1
 suffix=f"s{randomSeed}"
 
-
+# Set paths
+currdir=os.getcwd()
+outdir="DUMMY"
+path="/Users/mcfayden/Work/FASER/FASER2/FASER_FORESEE/FORESEE/"
 G4path="../G4_test"
 
-#masses = [ 0.01  ,  0.1,  1.0, 10. ]
-
-#masses = [ 
-#    0.01  ,  0.0126,  0.0158,  0.02  ,  0.0251,  0.0316,  0.0398,
-#    0.0501,  0.0631,  0.0794,  0.1   ,  0.1122,  0.1259,  0.1413,
-#    0.1585,
-#
-
-
-#    0.1778,  0.1995,  0.2239,  0.2512,  0.2818,  0.3162,
-#    0.3548,  0.3981,  0.4467,  0.5012,  0.5623,  0.6026,  0.631 ,
-#    0.6457,  0.6607,  0.6761,  0.6918,  0.7079,  0.7244,  0.7413,
-#    0.7586,  0.7762,  0.7943,  0.8128,  0.8318,
-
-
-#    0.8511,  0.871 ,
-#    0.8913,  0.912 ,  0.9333,  0.955 ,  0.9772,  1.    ,  1.122 ,
-#    1.2589,  1.4125,  1.5849,  1.7783,  1.9953,  2.2387,  2.5119,
-#    2.8184,  3.1623,  3.9811,  5.0119,  6.3096,  7.9433, 10.    
-#]
-
-
-#couplings=np.logspace(-8,-3,12)
+# Get details of setups
+setup_dict=setups.setup_dict
 
 
 
-#pids=[[-11, 11]]
-
-#pids=[[-13,13],[999,999]]
-
-
-setup_dict={
-
-#    "F2-default":{
-#        "name":"FASER2 Orig",# (Default)",
-#        #"color":"maroon",
-#        "color":"firebrick",
-#        "selection":"np.sqrt(x.x**2 + x.y**2)< 1",
-#        "length":5,
-#        "distance":480,
-#        "channels": None,
-#        "G4":["FASER2_HepMC_v4_FASER2_Default_3rdTrkStation"],
-#        "effs":{"sep":[(0.1,'sep>0.1mm','abs(ep_y-em_y)>0.1'),
-#                       (1,'sep>1mm','abs(ep_y-em_y)>1'),
-#                       (5,'sep>5mm','abs(ep_y-em_y)>5'),
-#                       (10,'sep>10mm','abs(ep_y-em_y)>10'),
-#                      (100,'sep>100mm','abs(ep_y-em_y)>100')]}
-#    },
-#
-#    "S2-L10-D2":{
-#        #"name":"S2 L=10m D=2m",
-#        "name":"Old Baseline",
-#        "color":"royalblue",
-#        #"color":"darkgreen",
-#        #"color":"orange",
-#        "selection":"np.sqrt(x.x**2 + x.y**2)< 1",
-#        "length":10,
-#        "distance":615,
-#        "channels": None,
-#        "G4":["FASER2_HepMC_v4_FASER2_Cavern_3rdTrkStation"],
-#        "effs":{"sep":[(0.1,'sep>0.1mm','abs(ep_y-em_y)>0.1'),
-#                       (1,'sep>1mm','abs(ep_y-em_y)>1'),
-#                       (5,'sep>5mm','abs(ep_y-em_y)>5'),
-#                       (10,'sep>10mm','abs(ep_y-em_y)>10'),
-#                       (100,'sep>100mm','abs(ep_y-em_y)>100')]}
-#
-#    },
-#
-    
-        "R1-L10-R1x3":{
-            #"name":"R1 L=10m X=3m Y=1m",
-            "name":"New Baseline (X=3m Y=1m)",
-            #"color":"cornflowerblue",
-            "color":"forestgreen",
-            #"color":"limegreen",
-            "style":"dashed",
-            "selection":"(np.sqrt(x.x**2)<1.5) * (np.sqrt(x.y**2)<0.5)",
-            "length":10,
-            "distance":615,
-            "channels": None,
-             "G4":["FASER2_HepMC_v4_FASER2_Cavern_Rect_Baseline_Bhoriz_AllTrkStations"],
-            "effs":{
-                "sep":[(0.1,'sep>0.1mm','abs(ep_x-em_x)>0.1'),
-                       (1,'sep>1mm','abs(ep_x-em_x)>1'),
-                       (5,'sep>5mm','abs(ep_x-em_x)>5'),
-                       (10,'sep>10mm','abs(ep_x-em_x)>10'),
-                       (100,'sep>100mm','abs(ep_x-em_x)>10')],
-#                "env":[(-250,'env<-250mm','abs(ep_x)<(1500-250)&&abs(em_x)<(1500-250)&&abs(ep_y)<(500-250)&&abs(em_y)<(500-250)'),
-#                       (-100,'env<-100mm','abs(ep_x)<(1500-100)&&abs(em_x)<(1500-100)&&abs(ep_y)<(500-100)&&abs(em_y)<(500-100)'),
-#                       (0,'env<0mm','abs(ep_x)<(1500)&&abs(em_x)<(1500)&&abs(ep_y)<(500)&&abs(em_y)<(500)'),
-#                       (100,'env<100mm','abs(ep_x)<(1500+100)&&abs(em_x)<(1500+100)&&abs(ep_y)<(500+100)&&abs(em_y)<(500+100)'),
-#                       (250,'env<250mm','abs(ep_x)<(1500+250)&&abs(em_x)<(1500+250)&&abs(ep_y)<(500+250)&&abs(em_y)<(500+250)'),
-#                       (500,'env<500mm','abs(ep_x)<(1500+500)&&abs(em_x)<(1500+500)&&abs(ep_y)<(500+500)&&abs(em_y)<(500+500)'),
-#                       (1000,'env<1000mm','abs(ep_x)<(1500+1000)&&abs(em_x)<(1500+1000)&&abs(ep_y)<(500+1000)&&abs(em_y)<(500+1000)')],
-#                "envx":[(-1000,'env<-1000mm','abs(ep_x)<(1500-1000)&&abs(em_x)<(1500-1000)'),
-#                        (-500,'env<-500mm','abs(ep_x)<(1500-500)&&abs(em_x)<(1500-500)'),
-#                        (-250,'env<-250mm','abs(ep_x)<(1500-250)&&abs(em_x)<(1500-250)'),
-#                        (-100,'env<-100mm','abs(ep_x)<(1500-100)&&abs(em_x)<(1500-100)'),
-#                        (0,'env<0mm','abs(ep_x)<(1500)&&abs(em_x)<(1500)'),
-#                        (100,'env<100mm','abs(ep_x)<(1500+100)&&abs(em_x)<(1500+100)'),
-#                        (250,'env<250mm','abs(ep_x)<(1500+250)&&abs(em_x)<(1500+250)'),
-#                        (500,'env<500mm','abs(ep_x)<(1500+500)&&abs(em_x)<(1500+500)'),
-#                        (1000,'env<1000mm','abs(ep_x)<(1500+1000)&&abs(em_x)<(1500+1000)')],
-
-            }
-        },
-
-#      "R1-L10-R0p5x3":{
-#          #"name":"R1 L=10m X=3m Y=0.5m",
-#          "name":"New Baseline (X=3m Y=0.5m)",
-#          #"color":"lightsteelblue",
-#          "color":"orchid",
-#          #"color":"limegreen",
-#          "style":"dotted",
-#          "selection":"(np.sqrt(x.x**2)<1.5) * (np.sqrt(x.y**2)<0.25)",
-#          "length":10,
-#          "distance":615,
-#          "channels": None,
-#          "G4":["FASER2_HepMC_v4_FASER2_Cavern_Rect_KEKRect_3rdTrkStation"],
-#          "effs":{"sep":[(0.1,'sep>0.1mm','abs(ep_x-em_x)>0.1'),
-#                         (1,'sep>1mm','abs(ep_x-em_x)>1'),
-#                         (5,'sep>5mm','abs(ep_x-em_x)>5'),
-#                         (10,'sep>10mm','abs(ep_x-em_x)>10'),
-#                         (100,'sep>100mm','abs(ep_x-em_x)>100')]}
-#      },
-
-#    "R1-L10-R0p5x2":{
-#        #"name":"R1 L=10m X=2m Y=0.5m",
-#        "name":"New Baseline (X=2m Y=0.5m)",
-#        #"color":"lightsteelblue",
-#        "color":"pink",
-#        "style":"dotted",
-#        "selection":"(np.sqrt(x.x**2)<1.0) * (np.sqrt(x.y**2)<0.25)",
-#        "length":10,
-#        "distance":615,
-#        "channels": None,
-#        "G4":["FASER2_HepMC_v4_FASER2_Cavern_Rect_KEKCircle_3rdTrkStation"],
-#        "effs":{"sep":[(0.1,'sep>0.1mm','abs(ep_x-em_x)>0.1'),
-#                       (1,'sep>1mm','abs(ep_x-em_x)>1'),
-#                       (5,'sep>5mm','abs(ep_x-em_x)>5'),
-#                       (10,'sep>10mm','abs(ep_x-em_x)>10'),
-#                       (100,'sep>100mm','abs(ep_x-em_x)>100')]}
-#    },
-    
-
-    
-}
-
-
-
-currdir=os.getcwd()
-
-#clear existing eff files
-
+# Loop over setups
 
 ndettot=len(setup_dict)
 
@@ -204,19 +56,10 @@ for ndet,setup_name in enumerate(setup_dict):
     outdir=setup_name+"_"+model+"/"
     setup=setup_dict[setup_name]
 
-    if runmode=="eff":
-        if "G4" not in setup:
-            continue
-        for G4setup in setup["G4"]:
-            for eff in setup["effs"]:
-                effname=f"{currdir}/{outdir}/eff_{energy}TeV_{G4setup}_{eff}.csv"
-                print(f"Clearing eff file {effname}")
-                efffile = open(effname,'w')
-                efffile.close()
-
-    
+    # make empty csv file (will append to this later
+    utils.clear_csvs(runmode,setup,currdir,outdir,energy)
+   
     print(f"\n\n=== Detector setup {setup_name} === ({ndet+1}/{ndettot})") 
-
         
     m_c_nevents=[]
 
@@ -234,81 +77,40 @@ for ndet,setup_name in enumerate(setup_dict):
             # Read G4 output files to get efficiencies for each configuration
             if runmode=="eff":
 
-                import ROOT
-                import pyhepmc
-
                 if "G4" not in setup:
                     print(f"Error: No G4 configuration found for {setup_name}")
                     continue
                 
 
                 for G4setup in setup["G4"]:
+
+                    for station in setup["stations"]:
                     
-                    for eff in setup["effs"]:
-
-
-                        sumall=0.
-                        sumeffs=[0. for x in setup["effs"][eff]]
-                        
-                        for decay in decays:
-                            #hepname=f"{outdir}/events_{energy}TeV_m{mass}GeV_c{coup}to_{pid1}_{pid2}_{suffix}.hepmc"
-                            hepname=f"{outdir}/events_{energy}TeV_m{mass}GeV_c{coup}_to_{decay}_{suffix}.hepmc"
-                            outroot=f"{currdir}/{hepname}".replace('.hepmc',f'_{G4setup}.root')
-
-                            # get xs from hepmc
-                            xs=0.
-                            with pyhepmc.open(hepname) as f:
-                                event = f.read()
-                                xs=event.cross_section.xsec()
-                                print("Found cross section:",xs)
-        
-                            if not os.path.exists(outroot):
-                                print(f"ROOT file {outroot} not found - skipping")
-                                continue
+                        # Calculate efficiencies 
+                        for eff in setup["effs"]:
+    
+                            sumall=0. # denominator for eff calc
+                            sumeffs=[0. for x in setup["effs"][eff]] # numerator(s) for eff calc
                             
-                            f_eff=ROOT.TFile.Open(outroot,"READ")
-                            t_eff = f_eff.Get("Hits")
-
-
-                            varp='ep'
-                            varm='em'
-                            if abs(pid1) == 13:
-                                varp='mp'
-                                varm='mm'
-                            elif abs(pid1) == 999:
-                                varp='hp'
-                                varm='hm'
-
-                            vary=varp+'_y'                                
-                            print(f"Using var {vary}")
-
-
-                            hall=ROOT.TH1F("hall","hall",1000,0,10000)                                
-                            t_eff.Draw(f"{vary}>>hall");
-                            sumall+=hall.Integral()*xs
-                            print(f"pid1 = {pid1}, all =",hall.Integral(),xs,hall.Integral()*xs)
+                            for decay in decays:
+                                #hepname=f"{outdir}/events_{energy}TeV_m{mass}GeV_c{coup}to_{pid1}_{pid2}_{suffix}.hepmc"
+                                hepname=f"{outdir}/events_{energy}TeV_m{mass}GeV_c{coup}_to_{decay}_{suffix}.hepmc"
+                                outroot=f"{currdir}/{hepname}".replace('.hepmc',f'_{G4setup}.root')
+    
+                                sumall,sumeffs=utils.get_effs(hepname,sumall,sumeffs,outroot,decay,station,setup["effs"][eff])
+                                print("JOSH1:",sumall,sumeffs)
                                 
+                            # open output file to append results to
+                            effname=f"{currdir}/{outdir}/eff_{energy}TeV_{G4setup}_station{station}_{eff}.csv"
+                            print(f"Opening eff file {effname}")
+                            efffile = open(effname,'a')
+    
                             for n,(effval,efftitle,effstring) in enumerate(setup["effs"][eff]):
-
-                                effstring=effstring.replace('ep',varp).replace('em',varm)
-                                heff=ROOT.TH1F("heff","heff",1000,0,10000)
-                                t_eff.Draw(f"{vary}>>heff",effstring)
-
-                                print(f"pid1 = {pid1},",effstring,", effs[{n}] =",heff.Integral(),xs,heff.Integral()*xs)
-                                sumeffs[n]+=heff.Integral()*xs
-
+                                effcalc=sumeffs[n]/sumall if sumall > 0 else 1.0
+                                print(f'{mass},{coup},{effval},{effcalc}\n')
+                                efffile.write(f'{mass},{coup},{effval},{effcalc}\n')
                                 
-                        # open output file to append results to
-                        effname=f"{currdir}/{outdir}/eff_{energy}TeV_{G4setup}_{eff}.csv"
-                        print(f"Opening eff file {effname}")
-                        efffile = open(effname,'a')
-
-                        for n,(effval,efftitle,effstring) in enumerate(setup["effs"][eff]):
-                            effcalc=sumeffs[n]/sumall if sumall > 0 else 1.0
-                            print(f'{mass},{coup},{effval},{effcalc}\n')
-                            efffile.write(f'{mass},{coup},{effval},{effcalc}\n')
-                             
-                        efffile.close()
+                            #efffile.close()
 
 
             ndectot=len(decays)
@@ -329,26 +131,55 @@ for ndet,setup_name in enumerate(setup_dict):
                 
                 #break
 
+            
 
                 if "run" in runmode:
+                    f = None
                     #npname=f"{outdir}/events_{energy}TeV_m{mass}GeV_c{coup}to_{pid1}_{pid2}.npy"
                     #npname=f"{outdir}/events_{energy}TeV_m{mass}GeV_c{coup}_to_{decay}.npy"
                     if os.path.exists(npname):
-                        if do_hepmc and os.path.exists(hepname):
-                            print(f"Files {npname} and {hepname} found, skipping to next mass/coup/decay point")
-                            continue
-                        else:
-                            print(f"File {npname} found, moving to next step...")
+                        #if do_hepmc and os.path.exists(hepname):
+                        #    print(f"Files {npname} and {hepname} found, skipping to next mass/coup/decay point")
+                        #    continue
+                        #else:
+                        print(f"File {npname} found, moving to next step...")
                     #f = ForeseeGenerator(model, energy, mass, [coup], pid1, pid2, outdir = outdir, path = path, randomSeed = randomSeed, t0 = t0, notime = notime, suffix = suffix, selection=setup["selection"], length=setup["length"], distance=setup["distance"])
                     else:
 
                         print(f"   Working on {npname}")
                         f = ForeseeGenerator(model, energy, mass, [coup], decay, outdir = outdir, path = path, randomSeed = randomSeed, t0 = t0, notime = notime, suffix = suffix, selection=setup["selection"], length=setup["length"], distance=setup["distance"])
-                        #print("JOSH",f.mass)
-                        #print("JOSH",f.couplings)
                         f.write()
                        
-                
+                    # Run HepMC creation
+                    if do_hepmc:
+                        if os.path.exists(hepname):
+                            print(f"File {hepname} found, skipping to next")
+                            #continue
+                        else:
+
+                            print(f"   Working on {hepname}")
+
+                            skip=False
+                            if os.path.exists(npname):
+                                np_arr=np.load(npname)
+                                energies=np_arr[0]
+                                thetas=np_arr[1]
+                                weights=np_arr[2]
+                                if max(weights) == 0.:
+                                    print("WARNING: Max weight = 0, not trying HepMC generation")
+                                    skip=True
+
+                            if not skip:
+                                if not f:
+                                    f = ForeseeGenerator(model, energy, mass, [coup], decay, outdir = outdir, path = path, randomSeed = randomSeed, t0 = t0, notime = notime, suffix = suffix, selection=setup["selection"], length=setup["length"], distance=setup["distance"])
+
+                                try:
+                                    hepname=f.write_hepmc(nevents)
+                                    hepname=outdir+"/"+hepname
+                                    print("saving hepmc file:",hepname)
+                                except:
+                                    print("Error in HepMC output creation")
+                            
 
 
                 if "combine" in runmode:
@@ -381,18 +212,6 @@ for ndet,setup_name in enumerate(setup_dict):
                 #hepname=f"{outdir}/events_{energy}TeV_m{mass}GeV_c{coup}to_{pid1}_{pid2}_{suffix}.hepmc"
 
 
-                # Run HepMC creation
-                if runmode=="run" and do_hepmc:
-                    if os.path.exists(hepname):
-                        print(f"File {hepname} found, skipping to next")
-                        continue
-                    
-                    try:
-                        hepname=f.write_hepmc(nevents)
-                        hepname=outdir+"/"+hepname
-                        print("saving hepmc file:",hepname)
-                    except:
-                        print("Error in HepMC output creation")
 
 
                 # Run G4 simulation for how every many setups are defined
@@ -431,7 +250,7 @@ for ndet,setup_name in enumerate(setup_dict):
                             infile.write(infiletext+'\n')
                             infile.close()
                         
-                            with open(f'{currdir}/{outdir}/G4_{energy}TeV_m{mass}GeV_c{coup}to_{pid1}_{pid2}_{suffix}_{G4setup}.log', 'w') as f:
+                            with open(f'{currdir}/{outdir}/G4_{energy}TeV_m{mass}GeV_c{coup}_to_{decay}_{suffix}_{G4setup}.log', 'w') as f:
                                 process = subprocess.Popen(["./"+G4setup, infilename], stdout=f)
                                 process.wait()
                                 print("   ...G4 done!")
