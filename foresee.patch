@@ -1,51 +1,77 @@
-10d9
-< import csv
-91,115d89
-<     def apply_effs(self, couplings,masses,eff_data,eff_cut,nsignals):
-<         # Brute-force loop over masses and couplings to find match in efficiency
-<         for ic,coup in enumerate(couplings):
-<             for im,mass in enumerate(masses):
-<                 eff=-1
-< 
-<                 # match entry
-<                 for emass,ecoup,ecut,eeff in eff_data:
-<                     if abs((float(mass)-float(emass))/float(emass))<0.01 and abs((float(coup)-float(ecoup))/float(ecoup))<0.01 and float(eff_cut)==float(ecut):
-<                         eff=float(eeff)
-< 
-<                         #print("Found cut eff:",ecut)
-<                         break
-< 
-<                 # Efficiency not found
-<                 if eff<0:
-<                     #print("NOT FOUND:",masses[im],couplings[ic],eff_cut)
-<                     eff=1.0
-< 
-<                 # Apply efficiency
-<                 nsignals[im][ic]=nsignals[im][ic]*eff
-< 
-<         return nsignals
-< 
-<     
-997c971
-<             fs_label=14, eff_file=None,
----
->             fs_label=14,
-1048,1056d1021
-< 
-< 
-<         # check for efficiency file
-<         eff_data=[]
-<         if eff_file:
-<             eff_incsv=open(eff_file)
-<             eff_rows=csv.reader(eff_incsv)
-<             eff_data=list(eff_rows)
-< 
-1059c1024
-<             filename, label, color, ls, alpha, level, eff_cut = setup
----
->             filename, label, color, ls, alpha, level = setup
-1062,1065d1026
-< 
-<             if eff_cut:
-<                 nsignals=self.apply_effs(couplings,masses,eff_data,eff_cut,nsignals)
-<             
+--- src/foresee.py	2022-10-28 19:02:37.000000000 +0100
++++ src/foresee.py.orig	2022-10-28 17:12:39.000000000 +0100
+@@ -7,7 +7,6 @@
+ from skhep.math.vectors import LorentzVector, Vector3D
+ from scipy import interpolate
+ from matplotlib import gridspec
+-import csv
+ 
+ class Utility():
+ 
+@@ -88,31 +87,6 @@
+                 array.append(words)
+         return np.array(array)
+ 
+-    def apply_effs(self, couplings,masses,eff_data,eff_cut,nsignals):
+-        # Brute-force loop over masses and couplings to find match in efficiency
+-        for ic,coup in enumerate(couplings):
+-            for im,mass in enumerate(masses):
+-                eff=-1
+-
+-                # match entry
+-                for emass,ecoup,ecut,eeff in eff_data:
+-                    if abs((float(mass)-float(emass))/float(emass))<0.01 and abs((float(coup)-float(ecoup))/float(ecoup))<0.01 and float(eff_cut)==float(ecut):
+-                        eff=float(eeff)
+-
+-                        #print("Found cut eff:",ecut)
+-                        break
+-
+-                # Efficiency not found
+-                if eff<0:
+-                    #print("NOT FOUND:",masses[im],couplings[ic],eff_cut)
+-                    eff=1.0
+-
+-                # Apply efficiency
+-                nsignals[im][ic]=nsignals[im][ic]*eff
+-
+-        return nsignals
+-
+-    
+ class Model(Utility):
+ 
+     def __init__(self,name, path="./"):
+@@ -994,7 +968,7 @@
+             title=None, xlabel=r"Mass [GeV]", ylabel=r"Coupling",
+             xlims=[0.01,1],ylims=[10**-6,10**-3], figsize=(7,5), legendloc=None,
+             branchings=None, branchingsother=None,
+-            fs_label=14, eff_file=None,
++            fs_label=14,
+         ):
+ 
+         # initiate figure
+@@ -1045,24 +1019,11 @@
+             if label is None: continue
+             ax.text(posx, posy, label, fontsize=fs_label, color="dimgray", rotation=rotation)
+ 
+-
+-
+-        # check for efficiency file
+-        eff_data=[]
+-        if eff_file:
+-            eff_incsv=open(eff_file)
+-            eff_rows=csv.reader(eff_incsv)
+-            eff_data=list(eff_rows)
+-
+         # forward experiment sensitivity
+         for setup in setups:
+-            filename, label, color, ls, alpha, level, eff_cut = setup
++            filename, label, color, ls, alpha, level = setup
+             masses,couplings,nsignals=np.load(self.model.modelpath+"model/results/"+filename, allow_pickle=True, encoding='latin1')
+             m, c = np.meshgrid(masses, couplings)
+-
+-            if eff_cut:
+-                nsignals=self.apply_effs(couplings,masses,eff_data,eff_cut,nsignals)
+-            
+             n = np.log10(np.array(nsignals).T+1e-20)
+             ax.contour (m,c,n, levels=[np.log10(level)]       ,colors=color,zorder=zorder, linestyles=ls)
+             ax.contourf(m,c,n, levels=[np.log10(level),10**10],colors=color,zorder=zorder, alpha=alpha)
