@@ -10,14 +10,17 @@ class ForeseeGenerator(object):
     Generate LLP particles within FASER acceptance from FORESEE
     """
     
-    def __init__(self, modelname, energy, mass, couplings, daughter1_pid, daughter2_pid, outdir = None, path = '.', randomSeed = 12345, t0 = 0, notime = False, suffix = "", selection="np.sqrt(x.x**2 + (x.y - 0.06)**2)< 0.1", length=1.5, distance=480.):
+    #def __init__(self, modelname, energy, mass, couplings, daughter1_pid, daughter2_pid, outdir = None, path = '.', randomSeed = 12345, t0 = 0, notime = False, suffix = "", selection="np.sqrt(x.x**2 + (x.y - 0.06)**2)< 0.1", length=1.5, distance=480.):
+    def __init__(self, modelname, energy, mass, couplings, decaymode, outdir = None, path = '.', randomSeed = 12345, t0 = 0, notime = False, suffix = "", selection="np.sqrt(x.x**2 + (x.y - 0.06)**2)< 0.1", length=1.5, distance=480.):
 
         self.modelname = modelname
         self.energy = energy
         self.mass = mass
         self.couplings = [couplings] if isinstance(couplings, (str, int, float)) else couplings
-        self.daughter1_pid = daughter1_pid
-        self.daughter2_pid = daughter2_pid
+        #self.daughter1_pid = daughter1_pid
+        #self.daughter2_pid = daughter2_pid
+        self.decaymode = decaymode
+        self.mode = None
         self.outdir = outdir
         self.path = path
         self.version = 3  # Forsee "version"
@@ -32,31 +35,80 @@ class ForeseeGenerator(object):
 
         # Set decay mode ...
         
-        self.pid_map = { 
-            (-11, 11) : ["e_e"],
-            (11, -11) : ["e_e"],                       
-            (-13, 13) : ["mu_mu"],
-            (13, -13) : ["mu_mu"],            
-            (22, 22) : ["gamma_gamma"],
-            (999,999) : ["K_K",
-                         "K_K_pi",
-                         "c_c",
-                         "d_d",
-                         "other_hadrons",
-                         "pi+_pi-",
-                         "pi+_pi-_pi+_pi-",
-                         "pi+_pi-_pi0",
+#        self.pid_map = { 
+#            (-11, 11) : ["e_e"],
+#            (11, -11) : ["e_e"],                       
+#            (-13, 13) : ["mu_mu"],
+#            (13, -13) : ["mu_mu"],            
+#            (22, 22) : ["gamma_gamma"],
+#            (999,999) : ["K_K",
+#                         "K_K_pi",
+#                         "c_c",
+#                         "d_d",
+#                         "other_hadrons",
+#                         "pi+_pi-",
+#                         "pi+_pi-_pi+_pi-",
+#                         "pi+_pi-_pi0",
+#                         "pi+_pi-_pi0_pi0",
+#                         "pi0_gamma",
+#                         "s_s",
+#                         "u_u"],
+#            (111,111):                ["pi0_pi0"],
+#            (211, -211):             ["pi+_pi-"],
+#            (211, -211, 211, -211):   ["pi+_pi-_pi+_pi-"],
+#            (211, -211, 111, 111):    ["pi+_pi-_pi0_pi0"],
+#            (111, 111, 111, 111):     ["pi0_pi0_pi0_pi0"],
+#            (321, -321):              ["K_K"],
+#            (5,-5):                   ["b_b"],
+#            (4,-4):                   ["c_c"],
+#            (21,-21):                 ["g_g"],
+#            (3,-3):                   ["s_s"],
+#            (15,-15):                 ["tau_tau"]
+#            }
+
+        self.decay_map = { 
+            "e_e" : ["e_e"],
+            "mu_mu" : ["mu_mu"],
+            "gamma_gamma" : ["gamma_gamma"],
+            "had" : ["K_K",
+                     "K_K_pi",
+                     "c_c",
+                     "d_d",
+                     "other_hadrons",
+                     "pi+_pi-",
+                     "pi+_pi-_pi+_pi-",
+                     "pi+_pi-_pi0",
                          "pi+_pi-_pi0_pi0",
-                         "pi0_gamma",
-                         "s_s",
-                         "u_u"]
+                     "pi0_gamma",
+                     "s_s",
+                     "u_u"],           
+            "pi_pi":         ["pi0_pi0","pi+_pi-"],
+            "pi0_pi0":         ["pi0_pi0"],
+            "pi+_pi-":         ["pi+_pi-"],
+            "4pi":             ["pi+_pi-_pi+_pi-","pi+_pi-_pi0_pi0","pi0_pi0_pi0_pi0"],
+            "pi+_pi-_pi+_pi-": ["pi+_pi-_pi+_pi-"],
+            "pi+_pi-_pi0_pi0": ["pi+_pi-_pi0_pi0"],
+            "pi0_pi0_pi0_pi0": ["pi0_pi0_pi0_pi0"],
+            "K_K":             ["K_K"],
+            "b_b":             ["b_b"],
+            "c_c":             ["c_c"],
+            "g_g":             ["g_g"],
+            "s_s":             ["s_s"],
+            "tau_tau":         ["tau_tau"],
+            "other":           ["b_b", "c_c", "g_g", "s_s", "tau_tau"],
+        }
 
-            }
+            
+        #self.mode = self.pid_map.get((self.daughter1_pid, self.daughter2_pid), None)
+        self.mode = self.decay_map.get(self.decaymode, None)
 
-        self.mode = self.pid_map.get((self.daughter1_pid, self.daughter2_pid), None)
         if self.mode is None:
-            sys.exit(f"Undefined decay to {self.daughter1_pid} + {self.daughter2_pid} for {self.modelname}")
+            #sys.exit(f"Undefined decay to {self.daughter1_pid} + {self.daughter2_pid} for {self.modelname}")
+            sys.exit(f"Undefined decay to {self.decaymode} for {self.modelname}")
 
+
+
+            
         # Set detector ...
         if self.version == 1:
             self.foresee = Foresee()
@@ -77,6 +129,8 @@ class ForeseeGenerator(object):
         
         if self.modelname == "DarkPhoton":
             self.data = self.darkphoton()
+        elif self.modelname == "DarkHiggs":
+            self.data = self.darkhiggs()
         elif self.modelname == "ALP-W":
             self.data = self.alp_W()
         else:
@@ -128,8 +182,8 @@ class ForeseeGenerator(object):
                 )
 
             self.model.set_br_1d(
-                modes = self.mode,
-                filenames=[f"files/models/{self.modelname}/br/{self.mode}.txt"] 
+                modes = self.decaymode,
+                filenames=[f"files/models/{self.modelname}/br/{self.decaymode}.txt"] 
                 )
 
         else:
@@ -221,6 +275,125 @@ class ForeseeGenerator(object):
         return self.decays()
 
 
+    
+    def darkhiggs(self):
+        
+        self.nbinsample = 100 # resample bins to help with asymmetric detector
+        
+        self.model.add_production_2bodydecay(
+            pid0 = "5",
+            pid1 = "321",
+            br = "5.7 * coupling**2 * pow(1.-pow(mass/5.279,2),2)",
+            generator = "Pythia8",
+            energy = self.energy,
+            nsample = 10,
+        )
+
+        self.model.add_production_2bodydecay(
+            pid0 = "-5",
+            pid1 = "321",
+            br = "5.7 * coupling**2 * pow(1.-pow(mass/5.279,2),2)",
+            generator = "Pythia8",
+            energy = self.energy,
+            nsample = 10,
+        )
+
+# @TODO: Get very different limits compared to the usual plots when including these... to be understood
+#    self.model.add_production_2bodydecay(
+#        pid0 = "25",
+#        pid1 = "0",
+#        br = "2*0.05",
+#        generator = "Pythia8",
+#        energy = self.energy,
+#        nsample = 100,
+#        scaling = 0,
+#    )
+#
+#    # 3-body
+#
+#    self.model.add_production_3bodydecay(
+#        label= "5_di",
+#        pid0 = "5",
+#        pid1 = "321",
+#        pid2 = "0",
+#        br = "7.37e-10*np.sqrt(1-4*mass**2/q**2)*(1-q**2/4.5**2)**2",
+#        generator = "Pythia8",
+#        energy = self.energy,
+#        nsample = 10,
+#        scaling = 0, 
+#    )
+#    
+#    self.model.add_production_3bodydecay(
+#        label= "-5_di",
+#        pid0 = "-5",
+#        pid1 = "321",
+#        pid2 = "0",
+#        br = "7.37e-10*np.sqrt(1-4*mass**2/q**2)*(1-q**2/4.5**2)**2",
+#        generator = "Pythia8",
+#        energy = self.energy,
+#        nsample = 10,
+#        scaling = 0, 
+#    )
+
+
+        self.model.set_ctau_1d(
+            #filename="files/models/"+self.modelname+"/ctau.txt",
+            filename="model/ctau.txt", 
+            coupling_ref=1
+        )
+    
+        allmodes=[
+            "e_e",
+            "mu_mu",
+            #"pi_pi",
+            "pi0_pi0",
+            "pi+_pi-",
+            #"4pi",
+            "pi+_pi-_pi+_pi-",
+            "pi+_pi-_pi0_pi0",
+            "pi0_pi0_pi0_pi0",
+            "K_K",
+            #"K+_K-",
+            #"Kl_Kl",
+            #"Ks_Ks",
+            "b_b",
+            "c_c",
+            "g_g",
+            "s_s",
+            "tau_tau"
+        ]
+        
+        allfinalstates=[
+            [11, -11],
+            [13, -13],
+            [111, 111],
+            [211, -211],
+            [211, -211, 211, -211],
+            [211, -211, 111, 111],
+            [111, 111, 111, 111],
+            [321, -321],
+            #[130,-130],
+            #[310,-310],
+            [5,-5],
+            [4,-4],
+            [21,-21],
+            [3,-3],
+            [15,-15]
+        ]
+        
+        
+        ## Branching ratio
+        self.model.set_br_1d(
+            modes=allmodes,
+            finalstates = allfinalstates,
+            #filenames=["files/models/"+self.modelname+"/br/"+mode+".txt" for mode in allmodes]
+            filenames=["model/br/"+mode+".txt" for mode in allmodes]
+        )
+        
+        return self.decays()
+
+
+            
     def alp_W(self):
 
         self.nbinsample = 100 # resample bins to help with smoothness
@@ -273,8 +446,8 @@ class ForeseeGenerator(object):
 
         if self.version == 1:
             self.model.set_br_1d(
-                modes = self.mode,
-                filenames=[f"files/models/{self.modelname}/br/{self.mode}.txt"] 
+                modes = self.decaymode,
+                filenames=[f"files/models/{self.modelname}/br/{self.decaymode}.txt"] 
                 )
         else:
             self.model.set_br_1d(
@@ -304,9 +477,13 @@ class ForeseeGenerator(object):
         # Get LLP spectrum
         self.foresee.set_model(model=self.model)
         # This is just a reference coupling 
-        plt = self.foresee.get_llp_spectrum(self.mass, coupling=1, do_plot=True)  
-        plt.savefig(f"{self.modelname}_m{self.mass}.png")
-        plt.close()
+        try:
+            plt = self.foresee.get_llp_spectrum(self.mass, coupling=1, do_plot=True)  
+            plt.savefig(f"{self.modelname}_m{self.mass}.png")
+            plt.close()
+        except:
+            print("Failed to make LLP spectrum plot")
+            
 
         def flatten(l):
             return [i for sublist in l for i in sublist]
@@ -390,9 +567,11 @@ class ForeseeGenerator(object):
             os.mkdir(self.outdir)
 
         if len(self.couplings) == 1:
-            filename = f"{self.outdir}/events_{self.energy}TeV_m{self.mass}GeV_c{self.couplings[0]}to_{self.daughter1_pid}_{self.daughter2_pid}.npy"
+            #filename = f"{self.outdir}/events_{self.energy}TeV_m{self.mass}GeV_c{self.couplings[0]}to_{self.daughter1_pid}_{self.daughter2_pid}.npy"
+            filename = f"{self.outdir}/events_{self.energy}TeV_m{self.mass}GeV_c{self.couplings[0]}_to_{self.decaymode}.npy"
         else:
-            filename = f"{self.outdir}/events_{self.energy}TeV_m{self.mass}GeV_to_{self.daughter1_pid}_{self.daughter2_pid}.npy"
+            #filename = f"{self.outdir}/events_{self.energy}TeV_m{self.mass}GeV_to_{self.daughter1_pid}_{self.daughter2_pid}.npy"
+            filename = f"{self.outdir}/events_{self.energy}TeV_m{self.mass}GeV_to_{self.decaymode}.npy"
 
         print(f"Generated {len(thetas)} events")
         print(f"save data to file: {filename}")
@@ -414,8 +593,9 @@ class ForeseeGenerator(object):
 
             
         #filename =  f"{self.outdir}/events_{self.energy}TeV_m{self.mass}GeV_c{self.couplings[0]}to_{self.daughter1_pid}_{self.daughter2_pid}{self.suffix}.hepmc"
-        filename =  f"events_{self.energy}TeV_m{self.mass}GeV_c{self.couplings[0]}to_{self.daughter1_pid}_{self.daughter2_pid}{self.suffix}.hepmc"
-        print("JOSH0")
+        #filename =  f"events_{self.energy}TeV_m{self.mass}GeV_c{self.couplings[0]}to_{self.daughter1_pid}_{self.daughter2_pid}{self.suffix}.hepmc"
+        filename =  f"events_{self.energy}TeV_m{self.mass}GeV_c{self.couplings[0]}_to_{self.decaymode}{self.suffix}.hepmc"
+
         self.foresee.write_events(self.mass, self.couplings[0], self.energy, filename=filename, numberevent=nevents, zfront = -1.5, seed = self.seed, decaychannels = self.mode, notime = self.notime, t0 = self.t0, nsample = self.nbinsample, outdir=self.outdir)
 
         #cfgname = f"{self.foresee.dirpath}/Models/{self.modelname}/" + filename.replace(".hepmc", ".cfg")
@@ -487,8 +667,9 @@ def main():
     parser.add_argument("model", help = "Name of foresee model")
     parser.add_argument("--mass", "-m", required = True, type = float, help = "Mass of mother [GeV]")
     parser.add_argument("--couplings", "-c", required = True, nargs = "+", help = "Couplings of mother (either single/mulitple values or tuple to pass to np.logspace)")
-    parser.add_argument("--pid1", required = True, type = int, help = "PID of daughter 1")
-    parser.add_argument("--pid2", default = None, type = int, help = "PID of daughter 2 (if not set then will be -PID1)")
+    #parser.add_argument("--pid1", required = True, type = int, help = "PID of daughter 1")
+    #parser.add_argument("--pid2", default = None, type = int, help = "PID of daughter 2 (if not set then will be -PID1)")
+    parser.add_argument("--decaymode", default = None, help = "Decay mode")
     parser.add_argument("--Ecom", default = "14", help = "Center of mass energy [TeV]")
     parser.add_argument("--outdir", "-o", default = None, help = "Output path")    
     parser.add_argument("--path", default = ".", help = "Path to foresee installation")
@@ -507,18 +688,21 @@ def main():
     add_to_python_path(f"{args.path}/src")
 
 
-    # Create PIDs
-    if args.pid2 is None:
-        args.pid2 = -args.pid1
+    ## Create PIDs
+    ##if args.pid2 is None:
+    #    args.pid2 = -args.pid1
     
     couplings = parse_couplings(args.couplings, args.hepmc)
 
     print(f"Generating {args.model} events at Ecom = {args.Ecom}") 
     print(f"   mother mass = {args.mass} GeV")
-    print(f"   decay = {args.pid1} {args.pid2}")
+    #print(f"   decay = {args.pid1} {args.pid2}")
+    print(f"   decay = {args.decaymode}")
     print(f"   couplings = {couplings}")    
 
-    f = ForeseeGenerator(args.model, args.Ecom, args.mass, couplings, args.pid1, args.pid2, outdir = args.outdir, path = args.path, randomSeed = args.randomSeed, t0 = args.t0, notime = args.notime, suffix = args.suffix, selection=args.selection, length=args.length, distance=args.distance)
+    #f = ForeseeGenerator(args.model, args.Ecom, args.mass, couplings, args.pid1, args.pid2, outdir = args.outdir, path = args.path, randomSeed = args.randomSeed, t0 = args.t0, notime = args.notime, suffix = args.suffix, selection=args.selection, length=args.length, distance=args.distance)
+
+    f = ForeseeGenerator(args.model, args.Ecom, args.mass, couplings, args.decaymode, outdir = args.outdir, path = args.path, randomSeed = args.randomSeed, t0 = args.t0, notime = args.notime, suffix = args.suffix, selection=args.selection, length=args.length, distance=args.distance)
 
     #print("args: model, Ecom, mass, couplings, pid1, pid2, outdir, path, randomSeed, t0, notime, suffix")
     #print("args:",args.model, args.Ecom, args.mass, couplings, args.pid1, args.pid2, args.outdir, args.path, args.randomSeed, args.t0, args.notime, args.suffix)
