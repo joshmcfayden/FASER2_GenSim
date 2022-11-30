@@ -8,10 +8,6 @@ from array import array
 import utils,setups
 
 
-
-#args: model, Ecom, mass, couplings, pid1, pid2, outdir, path, randomSeed, t0, notime, suffix
-#args: DarkPhoton 14 0.1 [0.0001] 11 -11 mytest /Users/mcfayden/Work/FASER/FASER2/FASER_FORESEE/FORESEE/ 0 0 False test1
-
 runmode="run"
 #runmode="combine"
 runmode="G4"
@@ -93,7 +89,6 @@ for ndet,setup_name in enumerate(setup_dict):
                             sumeffs=[0. for x in setup["effs"][eff]] # numerator(s) for eff calc
                             
                             for decay in decays:
-                                #hepname=f"{outdir}/events_{energy}TeV_m{mass}GeV_c{coup}to_{pid1}_{pid2}_{suffix}.hepmc"
                                 hepname=f"{outdir}/events_{energy}TeV_m{mass}GeV_c{coup}_to_{decay}_{suffix}.hepmc"
                                 outroot=f"{currdir}/{hepname}".replace('.hepmc',f'_{G4setup}.root')
     
@@ -110,42 +105,26 @@ for ndet,setup_name in enumerate(setup_dict):
                                 print(f'{mass},{coup},{effval},{effcalc}\n')
                                 efffile.write(f'{mass},{coup},{effval},{effcalc}\n')
                                 
-                            #efffile.close()
 
 
             ndectot=len(decays)
             
             for ndec,decay in enumerate(decays):
                 
-                #print(f"Generating {model} events at Ecom = {energy}") 
-                #print(f"   mother mass = {mass} GeV")
-                #print(f"   decay = {pid1} {pid2}")
-                #print(f"   couplings = {coup}")    
-
                 print(f"\nGenerating {model} events at Ecom = {energy}, mass = {mass} GeV ({nmass+1}/{nmasstot}), coupling = {coup} ({ncoup+1}/{ncouptot}), decay = {decay} ({ndec+1}/{ndectot}) [{(nmass*ncouptot*ndectot)+(ncoup*ndectot)+(ndec)+1}/{nmasstot*ncouptot*ndectot}]")
                 
-                npname=""
-                
+               
                 npname=f"{outdir}/events_{energy}TeV_m{mass}GeV_c{coup}_to_{decay}.npy"
                 hepname=f"{outdir}/events_{energy}TeV_m{mass}GeV_c{coup}_to_{decay}_{suffix}.hepmc"
                 
-                #break
-
-            
 
                 if "run" in runmode:
                     f = None
-                    #npname=f"{outdir}/events_{energy}TeV_m{mass}GeV_c{coup}to_{pid1}_{pid2}.npy"
-                    #npname=f"{outdir}/events_{energy}TeV_m{mass}GeV_c{coup}_to_{decay}.npy"
-                    if os.path.exists(npname):
-                        #if do_hepmc and os.path.exists(hepname):
-                        #    print(f"Files {npname} and {hepname} found, skipping to next mass/coup/decay point")
-                        #    continue
-                        #else:
-                        print(f"File {npname} found, moving to next step...")
-                    #f = ForeseeGenerator(model, energy, mass, [coup], pid1, pid2, outdir = outdir, path = path, randomSeed = randomSeed, t0 = t0, notime = notime, suffix = suffix, selection=setup["selection"], length=setup["length"], distance=setup["distance"])
-                    else:
 
+                    if os.path.exists(npname):
+                        print(f"File {npname} found, moving to next step...")
+
+                    else:
                         print(f"   Working on {npname}")
                         f = ForeseeGenerator(model, energy, mass, [coup], decay, outdir = outdir, path = path, randomSeed = randomSeed, t0 = t0, notime = notime, suffix = suffix, selection=setup["selection"], length=setup["length"], distance=setup["distance"])
                         f.write()
@@ -154,9 +133,7 @@ for ndet,setup_name in enumerate(setup_dict):
                     if do_hepmc:
                         if os.path.exists(hepname):
                             print(f"File {hepname} found, skipping to next")
-                            #continue
                         else:
-
                             print(f"   Working on {hepname}")
 
                             skip=False
@@ -184,9 +161,6 @@ for ndet,setup_name in enumerate(setup_dict):
 
                 if "combine" in runmode:
                     if "run" not in runmode:
-                        #npname=f"{outdir}/events_{energy}TeV_m{mass}GeV_c{coup}to_{pid1}_{pid2}.npy"
-                        #npname=f"{outdir}/events_{energy}TeV_m{mass}GeV_c{coup}_to_{decay}.npy"
-
                         print("   Using file:",npname)
 
 
@@ -201,16 +175,12 @@ for ndet,setup_name in enumerate(setup_dict):
                 
                     nsignal+=sum(weights)*lumi
                     print(f"   nsignal: {nsignal}")
-                
+
+                    # trying to reduce memory usage
                     del np_arr
                     #np_arr.close()
                     gc.collect()
                 
-                #except:
-                #    print("Error in numpy output creation")
-                    
-                #hepname=f"{outdir}/events_{energy}TeV_m{mass}GeV_c{coup}to_{pid1}_{pid2}_{suffix}.hepmc"
-
 
 
 
@@ -263,6 +233,8 @@ for ndet,setup_name in enumerate(setup_dict):
                     else:
                         print(f"Not running G4, {hepname} not found")
 
+
+                # Plot particle separations for each of the three stations
                 if runmode=="plotsep":
                
                     for G4setup in setup["G4"]:
@@ -271,11 +243,8 @@ for ndet,setup_name in enumerate(setup_dict):
                         
 
 
-
-
             c_nevents.append(nsignal)
                                   
-
 
         m_c_nevents.append(c_nevents)
     
@@ -288,7 +257,6 @@ for ndet,setup_name in enumerate(setup_dict):
         outfile=outdir+"/"+energy+"TeV_"+setup_name+".npy"
         
         print("\nWriting output file:",outfile)
-        #np.save(outfile,[masses,couplings,m_c_nevents])
         np.save(outfile,np.array([masses,couplings,m_c_nevents],dtype=object))    
 
     
