@@ -55,7 +55,7 @@ setup_dict={
 #                       (1,'sep>1mm','abs(ep_x-em_x)>1'),
 #                       (5,'sep>5mm','abs(ep_x-em_x)>5'),
 #                       (10,'sep>10mm','abs(ep_x-em_x)>10'),
-#                       (100,'sep>100mm','abs(ep_x-em_x)>10')],
+#                       (100,'sep>100mm','abs(ep_x-em_x)>100')],
                 "env":[(-250,'env<-250mm','abs(ep_x)<(1500-250)&&abs(em_x)<(1500-250)&&abs(ep_y)<(500-250)&&abs(em_y)<(500-250)'),
                        (-100,'env<-100mm','abs(ep_x)<(1500-100)&&abs(em_x)<(1500-100)&&abs(ep_y)<(500-100)&&abs(em_y)<(500-100)'),
                        (0,'env<0mm','abs(ep_x)<(1500)&&abs(em_x)<(1500)&&abs(ep_y)<(500)&&abs(em_y)<(500)'),
