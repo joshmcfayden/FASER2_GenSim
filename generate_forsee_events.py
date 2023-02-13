@@ -549,7 +549,7 @@ class ForeseeGenerator(object):
         ax.set_yticklabels(ticklabels)
         ax.set_xlim(tmin, tmax)
         ax.set_ylim(pmin, pmax)
-        plt.savefig(f"{self.modelname}_m{self.mass}_acc.png")
+        plt.savefig(f"{self.outdir}/{self.modelname}_m{self.mass}_acc.png")
         plt.close()
 
     def write(self):

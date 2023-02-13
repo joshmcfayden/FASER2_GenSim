@@ -2,6 +2,7 @@ import numpy as np
 import ROOT
 import pyhepmc
 import os
+from array import array
 
 def get_model_setup(model,setup=None):
 
@@ -26,11 +27,15 @@ def get_model_setup(model,setup=None):
         couplings=np.logspace(-8,-3,20)
         
         
+        masses=[0.1585]
+        couplings=[1.2742749857031322e-06]
+
         
         
     elif model=="DarkHiggs":
         #decays=["e_e","mu_mu","pi_pi","4pi","K_K","other"]
-        decays=["e_e","mu_mu","pi_pi","K_K"]
+        #decays=["e_e","mu_mu","pi_pi","K_K"]
+        decays=["e_e"]
         
         
         masses = [   
@@ -158,3 +163,106 @@ def get_effs(hepname,sumall,sumeffs,outroot,decay,station,effs):
         f_eff.Close()
         
     return sumall,sumeffs
+
+
+def plot_seps(currdir,outdir,energy,mass,coup,decay,G4setup,setup_name):
+    infile=f"{currdir}/{outdir}/events_{energy}TeV_m{mass}GeV_c{coup}_to_{decay}_s1_{G4setup}.root"
+    if not os.path.exists(infile):
+        print(f"ROOT file {infile} not found - skipping")
+        return
+                        
+    
+    ROOT.gStyle.SetOptStat(0)
+    ROOT.gStyle.SetOptTitle(0)
+ 
+    f_L1 = ROOT.TFile.Open(infile)
+    t_L1 = f_L1.Get("Hits1")
+    
+    f_L2 = ROOT.TFile.Open(infile)
+    t_L2 = f_L2.Get("Hits2")
+    
+    f_L3 = ROOT.TFile.Open(infile)
+    t_L3 = f_L3.Get("Hits3")
+    
+    nbins = 50
+    xmin = 1e-3
+    xmax = 1e5
+    logxmin = ROOT.TMath.Log10(xmin)
+    logxmax = ROOT.TMath.Log10(xmax)
+    binwidth = (logxmax-logxmin)/nbins
+    xbins = [xmin]
+    for i in range(1,nbins+1) :
+        xbins.append(float(xmin + ROOT.TMath.Power(10,logxmin+i*binwidth)))
+        
+  
+    c1 = ROOT.TCanvas("c1","c1")
+    
+    #print(xmin,array('d',xbins))
+    
+    h_dy_L1 = ROOT.TH1D("h_dy_L1","h_dy_L1",nbins,array('d',xbins))
+    print(t_L1,h_dy_L1)
+    t_L1.Draw("abs(ep_y-em_y)>>h_dy_L1")
+    print(h_dy_L1)
+    
+    h_dy_L2 = ROOT.TH1D("h_dy_L2","h_dy_L2",nbins,array('d',xbins))
+    t_L2.Draw("abs(ep_x-em_x)>>h_dy_L2")
+    
+    h_dy_L3 = ROOT.TH1D("h_dy_L3","h_dy_L3",nbins,array('d',xbins))
+    t_L3.Draw("abs(ep_x-em_x)>>h_dy_L3")
+    
+    if h_dy_L1.Integral(): h_dy_L1.Scale(1./h_dy_L1.Integral())
+    if h_dy_L2.Integral(): h_dy_L2.Scale(1./h_dy_L2.Integral())
+    if h_dy_L3.Integral(): h_dy_L3.Scale(1./h_dy_L3.Integral())
+
+  
+    h_dy_L1.SetMaximum(1.1*ROOT.TMath.Max(h_dy_L1.GetMaximum(),h_dy_L3.GetMaximum()))
+    h_dy_L1.GetXaxis().SetTitle("Separation [mm]")
+    h_dy_L1.GetXaxis().SetTitleSize(0.045)
+    
+    h_dy_L1.SetLineColor(ROOT.kBlue+1)
+    h_dy_L1.SetLineWidth(3)
+    h_dy_L1.Draw("hist")
+    
+    h_dy_L2.SetLineStyle(ROOT.kDashed)
+    h_dy_L2.SetLineColor(ROOT.kBlue+1)
+    h_dy_L2.SetLineWidth(3)
+    h_dy_L2.Draw("histsame")
+
+    h_dy_L3.SetLineStyle(ROOT.kDotted)
+    h_dy_L3.SetLineColor(ROOT.kBlue+1)
+    h_dy_L3.SetLineWidth(3)
+    h_dy_L3.Draw("histsame")
+
+    
+    c1.SetLogx()
+    c1.SetTickx()
+    c1.SetTicky()
+    
+    leg = ROOT.TLegend(0.7,0.85,0.85,0.6)
+    leg.SetBorderSize(0)
+    leg.SetFillColor(0)
+    leg.SetTextSize(0.04)
+    leg.AddEntry(h_dy_L1,"Station 1","l")
+    leg.AddEntry(h_dy_L2,"Station 2","l")
+    leg.AddEntry(h_dy_L3,"Station 3","l")
+    
+    leg.Draw()
+    
+    latex = ROOT.TLatex()
+    latex.SetNDC()
+    latex.SetTextFont(42)
+    latex.SetTextSize(0.06)
+    latex.DrawLatex(0.15,0.8,"#bf{#it{FASER2}}")
+    latex.SetTextSize(0.05)
+    latex.DrawLatex(0.32,0.8,setup_name)
+    latex.SetTextSize(0.04)
+
+    latex2 = ROOT.TLatex()
+    latex2.SetNDC()
+    latex2.SetTextFont(42)
+    latex2.SetTextSize(0.04)
+    latex2.DrawLatex(0.15,0.75,f"m={mass} GeV")
+    latex2.DrawLatex(0.15,0.7,f"#varepsilon={coup:.5g}")
+    latex2.SetTextSize(0.04)
+
+    c1.SaveAs(f"{currdir}/{outdir}/plot_sep_stations_{energy}TeV_m{mass}GeV_c{coup}_to_{decay}_s1_{G4setup}.pdf")

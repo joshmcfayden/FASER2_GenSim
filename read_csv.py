@@ -39,6 +39,7 @@ if title=="Dark Higgs":
       
 #csvfile='/Users/mcfayden/Work/FASER/FASER2/FASER_FORESEE/R1-L10-R1x3_DarkHiggs//eff_14TeV_FASER2_HepMC_v4_FASER2_Cavern_Rect_Baseline_Bhoriz_AllTrkStations_station3_sep.csv'
 csvfile='/Users/mcfayden/Work/FASER/FASER2/FASER_FORESEE/R1-L10-R1x3_DarkHiggs//eff_14TeV_FASER2_HepMC_v4_FASER2_Cavern_Rect_Baseline_Bhoriz_AllTrkStations_station3_env.csv'
+csvfile='/Users/mcfayden/Work/FASER/FASER2/FASER_FORESEE/R1-L10-R1x3_DarkHiggs//eff_14TeV_FASER2_HepMC_v4_FASER2_Cavern_Rect_Baseline_Bhoriz_AllTrkStations_station1_sep.csv'
 
 df= pd.read_csv(csvfile,names=['masses', 'couplings', 'effcuts','effs'],header=None)
 

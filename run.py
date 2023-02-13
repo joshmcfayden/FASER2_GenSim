@@ -12,7 +12,7 @@ runmode="run"
 #runmode="combine"
 runmode="G4"
 #runmode="eff"
-runmode="plotsep"
+#runmode="plotsep"
 
 do_hepmc=False
 do_hepmc=True
@@ -70,41 +70,6 @@ for ndet,setup_name in enumerate(setup_dict):
     
             nsignal=0.
 
-            # Read G4 output files to get efficiencies for each configuration
-            if runmode=="eff":
-
-                if "G4" not in setup:
-                    print(f"Error: No G4 configuration found for {setup_name}")
-                    continue
-                
-
-                for G4setup in setup["G4"]:
-
-                    for station in setup["stations"]:
-                    
-                        # Calculate efficiencies 
-                        for eff in setup["effs"]:
-    
-                            sumall=0. # denominator for eff calc
-                            sumeffs=[0. for x in setup["effs"][eff]] # numerator(s) for eff calc
-                            
-                            for decay in decays:
-                                hepname=f"{outdir}/events_{energy}TeV_m{mass}GeV_c{coup}_to_{decay}_{suffix}.hepmc"
-                                outroot=f"{currdir}/{hepname}".replace('.hepmc',f'_{G4setup}.root')
-    
-                                sumall,sumeffs=utils.get_effs(hepname,sumall,sumeffs,outroot,decay,station,setup["effs"][eff])
-                                print("JOSH1:",sumall,sumeffs)
-                                
-                            # open output file to append results to
-                            effname=f"{currdir}/{outdir}/eff_{energy}TeV_{G4setup}_station{station}_{eff}.csv"
-                            print(f"Opening eff file {effname}")
-                            efffile = open(effname,'a')
-    
-                            for n,(effval,efftitle,effstring) in enumerate(setup["effs"][eff]):
-                                effcalc=sumeffs[n]/sumall if sumall > 0 else 1.0
-                                print(f'{mass},{coup},{effval},{effcalc}\n')
-                                efffile.write(f'{mass},{coup},{effval},{effcalc}\n')
-                                
 
 
             ndectot=len(decays)
@@ -112,8 +77,7 @@ for ndet,setup_name in enumerate(setup_dict):
             for ndec,decay in enumerate(decays):
                 
                 print(f"\nGenerating {model} events at Ecom = {energy}, mass = {mass} GeV ({nmass+1}/{nmasstot}), coupling = {coup} ({ncoup+1}/{ncouptot}), decay = {decay} ({ndec+1}/{ndectot}) [{(nmass*ncouptot*ndectot)+(ncoup*ndectot)+(ndec)+1}/{nmasstot*ncouptot*ndectot}]")
-                
-               
+                               
                 npname=f"{outdir}/events_{energy}TeV_m{mass}GeV_c{coup}_to_{decay}.npy"
                 hepname=f"{outdir}/events_{energy}TeV_m{mass}GeV_c{coup}_to_{decay}_{suffix}.hepmc"
                 
@@ -121,6 +85,7 @@ for ndet,setup_name in enumerate(setup_dict):
                 if "run" in runmode:
                     f = None
 
+                    # Only run if npy file doesn't already exist
                     if os.path.exists(npname):
                         print(f"File {npname} found, moving to next step...")
 
@@ -158,11 +123,8 @@ for ndet,setup_name in enumerate(setup_dict):
                                     print("Error in HepMC output creation")
                             
 
-
+                # Sum up all the signal yields from all the decay modes and put in one .npy file (this is what plot_reach() expects)
                 if "combine" in runmode:
-                    if "run" not in runmode:
-                        print("   Using file:",npname)
-
 
                     if not os.path.exists(npname):
                         print(f"WARNING: File {npname} not found, skipping to next")
@@ -240,15 +202,54 @@ for ndet,setup_name in enumerate(setup_dict):
                     for G4setup in setup["G4"]:
                         
                         utils.plot_seps(currdir,outdir,energy,mass,coup,decay,G4setup,setup_name)
+
+                c_nevents.append(nsignal)
                         
 
+            # Read G4 output files to get efficiencies for different cuts in each configuration
+            if runmode=="eff":
 
-            c_nevents.append(nsignal)
+                if "G4" not in setup:
+                    print(f"Error: No G4 configuration found for {setup_name}")
+                    continue
+                
+                # Do this for each G4 setup
+                for G4setup in setup["G4"]:
+
+                    # Go station by station
+                    for station in setup["stations"]:
+                    
+                        # Calculate efficiencies from cuts
+                        for eff in setup["effs"]:
+    
+                            sumall=0. # denominator for eff calc
+                            sumeffs=[0. for x in setup["effs"][eff]] # numerator(s) for eff calc
+                            
+                            for decay in decays:
+                                hepname=f"{outdir}/events_{energy}TeV_m{mass}GeV_c{coup}_to_{decay}_{suffix}.hepmc"
+                                outroot=f"{currdir}/{hepname}".replace('.hepmc',f'_{G4setup}.root')
+    
+                                sumall,sumeffs=utils.get_effs(hepname,sumall,sumeffs,outroot,decay,station,setup["effs"][eff])
+                                
+                            # open output file to append results to
+                            effname=f"{currdir}/{outdir}/eff_{energy}TeV_{G4setup}_station{station}_{eff}.csv"
+                            print(f"Opening eff file {effname}")
+                            efffile = open(effname,'a')
+    
+                            for n,(effval,efftitle,effstring) in enumerate(setup["effs"][eff]):
+                                effcalc=sumeffs[n]/sumall if sumall > 0 else 1.0
+                                print(f'{mass},{coup},{effval},{effcalc}\n')
+                                efffile.write(f'{mass},{coup},{effval},{effcalc}\n')
+                                
+
+
+
+
                                   
 
         m_c_nevents.append(c_nevents)
     
-
+    # Only want one file per setup
     if "combine" in runmode:
         outdir="FORESEE/Models/"+model+"/model/results/"
         if not os.path.exists(outdir):
