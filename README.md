@@ -13,7 +13,7 @@ Checkout FORESEE and apply patch:
 ```bash
 git clone https://github.com/KlingFelix/FORESEE.git
 cd FORESEE
-git checkout a6356187898763d3a4fe5e4b58b0b32171abc62e
+git checkout d359a4d5b56cff9b797a2df8c2cd2de3deb6da47
 patch src/foresee.py ../foresee.patch
 cd ..
 ```

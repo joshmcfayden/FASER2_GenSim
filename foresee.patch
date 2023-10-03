@@ -1,152 +1,79 @@
---- ../newFORESEE/FORESEE/src/foresee.py.orig	2022-10-28 17:12:39
-+++ FORESEE/src/foresee.py	2023-02-09 15:10:59
-@@ -7,6 +7,7 @@
- from skhep.math.vectors import LorentzVector, Vector3D
- from scipy import interpolate
- from matplotlib import gridspec
-+import csv
- 
- class Utility():
- 
-@@ -87,6 +88,31 @@
-                 array.append(words)
-         return np.array(array)
- 
-+    def apply_effs(self,couplings,masses,eff_data,eff_cut,nsignals):
-+        # Brute-force loop over masses and couplings to find match in efficiency
-+        for ic,coup in enumerate(couplings):
-+            for im,mass in enumerate(masses):
-+                eff=1.0
-+
-+                # match entry
-+                for emass,ecoup,ecut,eff in eff_data:
-+                    if abs((float(mass)-float(emass))/float(emass))<0.01 and abs((float(coup)-float(ecoup))/float(ecoup))<0.01 and float(eff_cut)==float(ecut):
-+                        eff=float(eff)
-+
-+                        print("Found cut eff:",ecut)
-+                        break
-+
-+                # Efficiency not found
-+                if eff==-1:
-+                    print("NOT FOUND:",masses[im],couplings[ic],eff_cut)
-+                    eff=1.0
-+
-+                # Apply efficiency
-+                nsignals[im][ic]=nsignals[im][ic]*eff
-+
-+        return nsignals
-+
-+    
- class Model(Utility):
- 
-     def __init__(self,name, path="./"):
-@@ -832,8 +858,11 @@
-         f.write("HepMC::Version 2.06.09\n")
-         f.write("HepMC::IO_GenEvent-START_EVENT_LISTING\n")
- 
-+        
-         # loop over events
-         for ievent, (weight, position, momentum, pids, finalstate) in enumerate(data):
-+            if ievent==0:
-+
-             # Event Info
-             # int: event number / int: number of multi paricle interactions [-1] / double: event scale [-1.] / double: alpha QCD [-1.] / double: alpha QED [-1.] / int: signal process id [0] / int: barcode for signal process vertex [-1] / int: number of vertices in this event [1] /  int: barcode for beam particle 1 [1] / int: barcode for beam particle 2 [0] /  int: number of entries in random state list (may be zero) [0] / long: optional list of random state integers [-] /  int: number of entries in weight list (may be zero) [0] / double: optional list of weights [-]
-             f.write("E "+str(ievent)+" -1 -1. -1. -1. 0 -1 1 1 0 0 0\n")
-@@ -880,7 +909,7 @@
-         f.write("HepMC::IO_GenEvent-END_EVENT_LISTING\n")
-         f.close()
-            
--    def write_events(self, mass, coupling, energy, filename=None, numberevent=10, zfront=0, nsample=1, seed=None, decaychannels=None, notime=True, t0=0, modes=None, return_data=False):
-+    def write_events(self, mass, coupling, energy, filename=None, numberevent=10, zfront=0, nsample=1, seed=None, decaychannels=None, notime=True, t0=0, modes=None, return_data=False, outdir=None):
- 
-         #set random seed
-         random.seed(seed)
-@@ -888,6 +917,7 @@
-         # get weighted sample of LLPs
-         _, _, _, weighted_raw_data, weights = self.get_events(mass=mass, energy=energy, couplings = [coupling], nsample=nsample, modes=modes)
- 
-+
-         # unweight sample
-         unweighted_raw_data = random.choices(weighted_raw_data[0], weights=weights[0], k=numberevent)
-         eventweight = sum(weights[0])/float(numberevent)
-@@ -905,13 +935,21 @@
-         if br_other>0: channels.append([[None,"unspecified"], br_other])
-         channels=np.array(channels).T
- 
-+                
-         # get LLP momenta and decay location
-         unweighted_data = []
-         for momentum in unweighted_raw_data:
-             # determine choice of final state
--            while True:
-+            tries=0
-+            # prevent from hanging
-+            while tries<100000:
-                 pids, mode = random.choices(channels[0], weights=channels[1], k=1)[0]
-                 if (decaychannels is None) or (mode in decaychannels): break
-+                tries=tries+1
-+            if tries==100000:
-+                print("ERROR: probility for ",decaychannels,"too low")
-+                return 1
-+            
-             # position
-             thetax, thetay = momentum.px/momentum.pz, momentum.py/momentum.pz
-             posz = random.uniform(0,self.length)
-@@ -925,12 +963,18 @@
-             # save
-             unweighted_data.append([eventweight, position, momentum, pids, finalstate])
- 
-+
-         # set output filename
-         dirname = self.model.modelpath+"model/events/"
-         if not os.path.exists(dirname): os.mkdir(dirname)
-         if filename==None: filename = dirname+str(mass)+"_"+str(coupling)+".hepmc"
--        else: filename = self.model.modelpath + filename
-+        else:
-+            if outdir:
-+                filename = outdir + "/" + filename
-+            else:
-+                filename = self.model.modelpath + filename
- 
-+
-         # write to HEPMC file
-         self.write_hepmc_file(filename=filename, data=unweighted_data)
-         
-@@ -968,7 +1012,7 @@
-             title=None, xlabel=r"Mass [GeV]", ylabel=r"Coupling",
-             xlims=[0.01,1],ylims=[10**-6,10**-3], figsize=(7,5), legendloc=None,
-             branchings=None, branchingsother=None,
--            fs_label=14,
-+            fs_label=14, eff_file=None,
-         ):
- 
-         # initiate figure
-@@ -1019,11 +1063,27 @@
-             if label is None: continue
-             ax.text(posx, posy, label, fontsize=fs_label, color="dimgray", rotation=rotation)
- 
-+
-+
-+        # check for efficiency file
-+        eff_data=[]
-+        if eff_file:
-+            eff_incsv=open(eff_file)
-+            eff_rows=csv.reader(eff_incsv)
-+            eff_data=list(eff_rows)
-+
-         # forward experiment sensitivity
-         for setup in setups:
--            filename, label, color, ls, alpha, level = setup
-+            filename, label, color, ls, alpha, level, eff_cut = setup
-+            if eff_file and len(filename.split('_eff'))>1:
-+                filename=filename.split('_eff')[0]+'.npy'
-+                
-             masses,couplings,nsignals=np.load(self.model.modelpath+"model/results/"+filename, allow_pickle=True, encoding='latin1')
-             m, c = np.meshgrid(masses, couplings)
-+
-+            if eff_cut:
-+                nsignals=self.apply_effs(couplings,masses,eff_data,eff_cut,nsignals)
-+            
-             n = np.log10(np.array(nsignals).T+1e-20)
-             ax.contour (m,c,n, levels=[np.log10(level)]       ,colors=color,zorder=zorder, linestyles=ls)
-             ax.contourf(m,c,n, levels=[np.log10(level),10**10],colors=color,zorder=zorder, alpha=alpha)
+9a10
+> import csv
+89a91,116
+>     def apply_effs(self,couplings,masses,eff_data,eff_cut,nsignals):
+>         # Brute-force loop over masses and couplings to find match in efficiency
+>         for ic,coup in enumerate(couplings):
+>             for im,mass in enumerate(masses):
+>                 eff=1.0
+> 
+>                 # match entry
+>                 for emass,ecoup,ecut,eff in eff_data:
+>                     if abs((float(mass)-float(emass))/float(emass))<0.01 and abs((float(coup)-float(ecoup))/float(ecoup))<0.01 and float(eff_cut)==float(ecut):
+>                         eff=float(eff)
+> 
+>                         print("Found cut eff:",ecut)
+>                         break
+> 
+>                 # Efficiency not found
+>                 if eff==-1:
+>                     print("NOT FOUND:",masses[im],couplings[ic],eff_cut)
+>                     eff=1.0
+> 
+>                 # Apply efficiency
+>                 nsignals[im][ic]=nsignals[im][ic]*eff
+> 
+>         return nsignals
+> 
+> 
+> 
+916c943
+<     def write_events(self, mass, coupling, energy, filename=None, numberevent=10, zfront=0, nsample=1, seed=None, decaychannels=None, notime=True, t0=0, modes=None, return_data=False, extend_to_low_pt_scales={}):
+---
+>     def write_events(self, mass, coupling, energy, filename=None, numberevent=10, zfront=0, nsample=1, seed=None, decaychannels=None, notime=True, t0=0, modes=None, return_data=False, extend_to_low_pt_scales={}, outdir=None):
+945c972,975
+<             while True:
+---
+>             #while True:
+>             tries=0
+>             # prevent from hanging
+>             while tries<100000:
+947a978,980
+>             if tries==100000:
+>                 print("ERROR: probility for ",decaychannels,"too low")
+>                 return 1
+965,966c998,1003
+<         else: filename = self.model.modelpath + filename
+<           
+---
+>         #else: filename = self.model.modelpath + filename
+>         else:
+>             if outdir:
+>                 filename = outdir + "/" + filename
+>             else:
+>                 filename = self.model.modelpath + filename          
+1004c1041
+<             fs_label=14,
+---
+>             fs_label=14, eff_file=None,
+1054a1092,1098
+>         # check for efficiency file
+>         eff_data=[]
+>         if eff_file:
+>             eff_incsv=open(eff_file)
+>             eff_rows=csv.reader(eff_incsv)
+>             eff_data=list(eff_rows)
+> 
+1057c1101,1105
+<             filename, label, color, ls, alpha, level = setup
+---
+>             #filename, label, color, ls, alpha, level = setup
+>             filename, label, color, ls, alpha, level, eff_cut = setup
+>             if eff_file and len(filename.split('_eff'))>1:
+>                 filename=filename.split('_eff')[0]+'.npy'
+>                 
+1059a1108,1111
+> 
+>             if eff_cut:
+>                 nsignals=self.apply_effs(couplings,masses,eff_data,eff_cut,nsignals)           
+>             
