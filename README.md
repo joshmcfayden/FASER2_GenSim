@@ -16,6 +16,7 @@ cd FORESEE
 git checkout d359a4d5b56cff9b797a2df8c2cd2de3deb6da47
 patch src/foresee.py ../foresee.patch
 cd ..
+export PYTHONPATH=$PYTHONPATH:$PWD/FORESEE/src/
 ```
 
 Setup environment for ROOT and G4 on MacOS:
@@ -27,7 +28,15 @@ source setup.sh
 Setup environment for ROOT and G4 on lxplus:
 ```bash
 source /cvmfs/sft.cern.ch/lcg/views/LCG_101/x86_64-centos7-gcc10-opt/setup.sh
+pip3 install scikit-hep
 ```
+
+Try example plotting script:
+```bash
+ln -s $PWD/14TeV_F2-default.npy FORESEE/Models/DarkPhoton/model/results/14TeV_F2-default.npy
+python3 plot_Reach_DarkPhoton_F2Default3rdStation_sep.py
+```
+This should make the output file `Reach_DarkPhoton_F2Default3rdStation_sep.pdf`.
 
 Setup G4 simulations:
 Follow the instructions here: https://github.com/joshmcfayden/FASER2_G4/tree/faser2_newbaseline_KEK/ to compile G4 simulations
