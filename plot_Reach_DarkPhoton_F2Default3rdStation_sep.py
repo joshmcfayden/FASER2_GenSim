@@ -324,7 +324,8 @@ if run_plotreach:
         legendloc=(1.02,0.72),
         figsize=(8,6),
         #eff_file="/Users/mcfayden/Work/FASER/FASER2//G4_test/bak/FASER2_HepMC_v4_FASER2_Cavern_1stTrkStation-build/sep_effs.csv"
-        eff_file="/Users/mcfayden/Work/FASER/FASER2/FASER_FORESEE/F2-default_DarkPhoton/eff_14TeV_FASER2_HepMC_v4_FASER2_Default_3rdTrkStation_sep.csv"
+        #eff_file="/Users/mcfayden/Work/FASER/FASER2/FASER_FORESEE/F2-default_DarkPhoton/eff_14TeV_FASER2_HepMC_v4_FASER2_Default_3rdTrkStation_sep.csv"
+        eff_file="eff_14TeV_FASER2_HepMC_v4_FASER2_Default_3rdTrkStation_sep.csv"
     )
     
     #data = foresee.readfile("files/models/"+modelname+"/lines/scalar_DM_Oh2_intermediate_eps_vs_mAprime.txt")
