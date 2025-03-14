@@ -35,20 +35,21 @@ def get_model_setup(model,setup=None):
     elif model=="DarkHiggs":
         #decays=["e_e","mu_mu","pi_pi","4pi","K_K","other"]
         #decays=["e_e","mu_mu","pi_pi","K_K"]
-        decays=["e_e"]
+        #decays=["e_e"]
+        decays=["mu_mu"]
         
         
         masses = [   
             0.1   ,  
             0.2239,  
             0.5012,  
-            0.6918,  
-            0.8128,  
-            0.955 ,
-            1.5849,  
-            3.5   ,
-            11.22 ,  
-            25.119
+#            0.6918,  
+#            0.8128,  
+#            0.955 ,
+#            1.5849,  
+#            3.5   ,
+#            11.22 ,  
+#            25.119
         ]
 
         couplings=np.logspace(-6,-3,20)

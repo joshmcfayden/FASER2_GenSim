@@ -4,6 +4,7 @@ from foresee import Foresee, Model, Utility
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib
+matplotlib.use('Agg')
 
 class ForeseeGenerator(object):
     """
@@ -479,7 +480,7 @@ class ForeseeGenerator(object):
         # This is just a reference coupling 
         try:
             plt = self.foresee.get_llp_spectrum(self.mass, coupling=1, do_plot=True)  
-            plt.savefig(f"{self.modelname}_m{self.mass}.png")
+            #plt.savefig(f"{self.modelname}_m{self.mass}.png")
             plt.close()
         except:
             print("Failed to make LLP spectrum plot")
@@ -515,7 +516,7 @@ class ForeseeGenerator(object):
         #print("Nwgts:",len(weights))
         #print("min wgts:",min(weights))
         #print("max wgts:",max(weights))
-        if max(weights) == 0:
+        if not len(weights) or max(weights) == 0:
             print("Max wgts = 0 - skipping plots")
             return
         

@@ -10,7 +10,7 @@ import utils,setups
 
 runmode="run"
 #runmode="combine"
-runmode="G4"
+#runmode="G4"
 #runmode="eff"
 #runmode="plotsep"
 
@@ -18,8 +18,8 @@ do_hepmc=False
 do_hepmc=True
 
 # Set model inputs
-#model="DarkPhoton"
-model="DarkHiggs"
+model="DarkPhoton"
+#model="DarkHiggs"
 masses,couplings,decays=utils.get_model_setup(model)
 
 # Set run parameters
@@ -35,7 +35,8 @@ suffix=f"s{randomSeed}"
 # Set paths
 currdir=os.getcwd()
 outdir="DUMMY"
-path="/Users/mcfayden/Work/FASER/FASER2/FASER_FORESEE/FORESEE/"
+#path="/Users/mcfayden/Work/FASER/FASER2/FASER_FORESEE/FORESEE/"
+path="/its/home/jam58/FASER2/FASER2_GenSim/FORESEE/"
 G4path="../G4_test"
 
 # Get details of setups
@@ -56,7 +57,12 @@ for ndet,setup_name in enumerate(setup_dict):
     utils.clear_csvs(runmode,setup,currdir,outdir,energy)
    
     print(f"\n\n=== Detector setup {setup_name} === ({ndet+1}/{ndettot})") 
-        
+
+
+    if not os.path.exists(outdir):
+        os.makedirs(outdir)
+
+    
     m_c_nevents=[]
 
     nmasstot=len(masses)
@@ -107,7 +113,7 @@ for ndet,setup_name in enumerate(setup_dict):
                                 energies=np_arr[0]
                                 thetas=np_arr[1]
                                 weights=np_arr[2]
-                                if max(weights) == 0.:
+                                if not len(weights) or max(weights) == 0.:
                                     print("WARNING: Max weight = 0, not trying HepMC generation")
                                     skip=True
 
