@@ -8,15 +8,15 @@ from array import array
 
 import utils,setups
 
-
-runmode="run"
+runmode="run combine"
+#runmode="run"
 #runmode="combine"
 #runmode="G4"
 #runmode="eff"
 #runmode="plotsep"
 
 do_hepmc=False
-do_hepmc=True
+#do_hepmc=True
 
 # Set model inputs
 model="DarkPhoton"
@@ -210,7 +210,7 @@ for ndet,setup_name in enumerate(setup_dict):
                         
                         utils.plot_seps(currdir,outdir,energy,mass,coup,decay,G4setup,setup_name)
 
-                c_nevents.append(nsignal)
+            c_nevents.append(nsignal)
                         
 
             # Read G4 output files to get efficiencies for different cuts in each configuration
@@ -265,6 +265,7 @@ for ndet,setup_name in enumerate(setup_dict):
         outfile=outdir+"/"+energy+"TeV_"+setup_name+".npy"
         
         print("\nWriting output file:",outfile)
+        print("m:",len(masses),"c:",len(couplings),"n:",len(m_c_nevents[0]))
         np.save(outfile,np.array([masses,couplings,m_c_nevents],dtype=object))    
 
     

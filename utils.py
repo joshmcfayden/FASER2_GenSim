@@ -27,8 +27,8 @@ def get_model_setup(model,setup=None):
         couplings=np.logspace(-8,-3,20)
         
         
-        masses=[0.1585]
-        couplings=[1.2742749857031322e-06]
+#        masses=[0.1585]
+#        couplings=[1.2742749857031322e-06]
 
         
         

@@ -1,22 +1,22 @@
 
 setup_dict={
 
-#    "F2-default":{
-#        "name":"FASER2 Orig",# (Default)",
-#        #"color":"maroon",
-#        "color":"firebrick",
-#        "selection":"np.sqrt(x.x**2 + x.y**2)< 1",
-#        "length":5,
-#        "distance":480,
-#        "channels": None,
-#        "G4":["FASER2_HepMC_v4_FASER2_Default_3rdTrkStation"],
-#        "effs":{"sep":[(0.1,'sep>0.1mm','abs(ep_y-em_y)>0.1'),
-#                       (1,'sep>1mm','abs(ep_y-em_y)>1'),
-#                       (5,'sep>5mm','abs(ep_y-em_y)>5'),
-#                       (10,'sep>10mm','abs(ep_y-em_y)>10'),
-#                      (100,'sep>100mm','abs(ep_y-em_y)>100')]}
-#    },
-#
+    "F2-default":{
+        "name":"FASER2 Orig",# (Default)",
+        #"color":"maroon",
+        "color":"firebrick",
+        "selection":"np.sqrt(x.x**2 + x.y**2)< 1",
+        "length":5,
+        "distance":480,
+        "channels": None,
+        "G4":["FASER2_HepMC_v4_FASER2_Default_3rdTrkStation"],
+        "effs":{"sep":[(0.1,'sep>0.1mm','abs(ep_y-em_y)>0.1'),
+                       (1,'sep>1mm','abs(ep_y-em_y)>1'),
+                       (5,'sep>5mm','abs(ep_y-em_y)>5'),
+                       (10,'sep>10mm','abs(ep_y-em_y)>10'),
+                      (100,'sep>100mm','abs(ep_y-em_y)>100')]}
+    },
+
 #    "S2-L10-D2":{
 #        #"name":"S2 L=10m D=2m",
 #        "name":"Old Baseline",
