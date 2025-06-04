@@ -1,12 +1,25 @@
 import pyhepmc
 import matplotlib.pyplot as plt
 
-run="R1-L10-R1x3_DarkHiggs"
-mass="1.5849"
-coupling="2.06913808111479e-06"
-decay="pi_pi"
+#run="R1-L10-R1x3_DarkHiggs"
+#mass="1.5849"
+#coupling="2.06913808111479e-06"
+#decay="pi_pi"
 
-    
+
+run="F2-default_DarkPhoton"
+mass="0.01"
+coupling="1e-08"
+decay="e_e"
+
+
+run="F2-default_DarkHiggs"
+mass="0.2239"
+coupling="1.8329807108324375e-05"
+decay="mu_mu"
+
+
+
 x=[]
 y=[]
 
@@ -34,5 +47,5 @@ with pyhepmc.open(f"{run}/events_14TeV_m{mass}GeV_c{coupling}_to_{decay}_s1.hepm
 plt.hist2d(x, y, bins=(50, 50), range=[[-3000, 3000], [-3000, 3000]], cmap=plt.cm.viridis,cmin=1e-9)
 plt.show()
         
-plot.subplots_adjust(left=0.12, right=0.97, bottom=0.10, top=0.95)
-plot.savefig("DarkHiggs_Pythia-Reach%s.pdf"%("_"+scan_name if scan_search else ""))
+plt.subplots_adjust(left=0.12, right=0.97, bottom=0.10, top=0.95)
+plt.savefig(f"{run}/events_14TeV_m{mass}GeV_c{coupling}_to_{decay}_s1.png")
